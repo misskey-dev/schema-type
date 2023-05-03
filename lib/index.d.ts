@@ -1,4 +1,4 @@
-import type { DeepReadonly } from "ts-essentials";
+import type { DeepReadonly } from 'ts-essentials';
 import type { JSONSchema7 as OriginalSchema7 } from 'json-schema';
 
 export type JSONSchema7 = OriginalSchema7 | DeepReadonly<OriginalSchema7>;
