@@ -1,7 +1,7 @@
 {
   "name": "schema-type",
   "version": "1.0.0",
-  "description": "",
+  "description": "Get TypeScript Type from JSON Schema",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "type": "module",
