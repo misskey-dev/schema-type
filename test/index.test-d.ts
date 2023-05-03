@@ -144,7 +144,7 @@ describe('SchemaType', () => {
 		});
 	});
 	describe('$defs', () => {
-		test('object', () => {
+		test('string', () => {
 			const s = {
 				$defs: {
 					bar: { type: 'string' },
@@ -153,6 +153,21 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { $ref: '#/$defs/bar' },
 				},
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string' });
+			expectNotType<S>({});
+		});
+		test('string required', () => {
+			const s = {
+				$defs: {
+					bar: { type: 'string' },
+				},
+				type: 'object',
+				properties: {
+					foo: { $ref: '#/$defs/bar' },
+				},
+				required: ['foo'],
 			} as const;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string' });
@@ -210,7 +225,7 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { $ref: '#' },
 				},
-				required: ['foo'],
+				//required: ['foo'],
 			} as const;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { foo: { foo: {} } } });

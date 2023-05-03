@@ -52,3 +52,5 @@ export const schema = {
 	],
 } as const;
 ```
+
+### $ref
