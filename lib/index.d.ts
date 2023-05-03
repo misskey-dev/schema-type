@@ -18,13 +18,13 @@ type OfSchema = {
 export type Obj = Record<string, JSONSchema7>;
 
 type ProhibitInfinitRoop<s extends Obj, Ks extends ReadonlyArray<keyof s>, R extends JSONSchema7[]> =
-	Ks extends readonly [infer A, ...infer B] ? A extends keyof s ?
+	Ks extends readonly [infer A, ...infer B] ? B extends ReadonlyArray<keyof s> ? A extends keyof s ?
 		s[A]['$ref'] extends R[number]['$id'] ?
 			Extract<R[number], { type: 'object' | 'array'; $id: s[A]['$ref']; }> extends JSONSchema7 ?
 				ProhibitInfinitRoop<s, B, R>
 			: [A, ...ProhibitInfinitRoop<s, B, R>]
 		: [A, ...ProhibitInfinitRoop<s, B, R>]
-	: never : [];
+	: never : never : [];
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
