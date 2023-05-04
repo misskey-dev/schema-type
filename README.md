@@ -30,7 +30,7 @@ type MyString = SchemaType<typeof schema>; // will `string`
 
 ### Storing and calling global references
 ```typescript
-import type { JSONSchema7, JSONSchema7Definition, GetDef, GetRefs } from 'schema-type';
+import type { JSONSchema7, JSONSchema7Definition, GetDef, GetRefs, GetRefsKeys } from 'schema-type';
 
 // Define as Record but key is ignored (you must specify key by `$id`).
 const refs = {
