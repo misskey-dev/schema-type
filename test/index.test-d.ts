@@ -348,7 +348,8 @@ describe('SchemaType', () => {
 						replies: {
 							type: 'array',
 							items: { $ref: 'https://example.com/schemas/Note' },
-						}
+						},
+						umm: { $ref: 'https://example.com/schemas/Umm' }
 					},
 					required: ['text', 'replies'],
 				},
