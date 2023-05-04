@@ -184,6 +184,25 @@ describe('SchemaType', () => {
 			expectType<S>(['string', 'string']);
 			expectNotType<S>([]);
 		});
+		test('anyOf object array', () => {
+			const s = {
+				type: 'array',
+				items: {
+					type: 'object',
+					properties: {
+						hoge: { type: 'string', minLength: 1 },
+						fuga: { type: 'string', minLength: 1 },
+					},
+					anyOf: [
+						{ required: ['hoge'] },
+						{ required: ['fuga'] },
+					],
+				},
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>([{ hoge: 'string' }]);
+			expectNotType<S>([]);
+		});
 	});
 	describe('$defs', () => {
 		test('string', () => {

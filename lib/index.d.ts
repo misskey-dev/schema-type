@@ -54,6 +54,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 type UnionSchemaType<a extends readonly any[], R extends JSONSchema7[], X extends JSONSchema7 = a[number]> = X extends any ? ChildSchemaType<X, R> : never;
 type UnionObjType<s extends Obj, a extends readonly (keyof s)[], R extends JSONSchema7[]> = a extends any ? ObjType<s, a, R> : never;
 type UnionType<Ts extends ReadonlyArray<JSONSchema7TypeName>, T extends JSONSchema7TypeName = Ts[number]> = Ts extends any ? TypeNameToType<T> : never;
+
 export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
 export type UnionToArray<T, A extends unknown[] = []> = T extends any ? [T, ...A] : never;
 export type RecordToArray<T extends Record<string, any>> = UnionToArray<RecordToUnion<T>>;
