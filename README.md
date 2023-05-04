@@ -19,19 +19,20 @@ pnpm add -D git+https://github.com/misskey-dev/schema-type
 
 ### Just Convert
 ```typescript
-import type { SchemaType } from 'schema-type';
+import type { SchemaType, JSONSchema7 } from 'schema-type';
 
 const schema = {
 	type: 'string',
-} as const;
+} as const satisfies JSONSchema7;
 
-const myString = SchemaType<typeof schema>; // will `string`
+type MyString = SchemaType<typeof schema>; // will `string`
 ```
 
-### Storing and calling definitions
+### Storing and calling references
 ```typescript
-import type { GetDef, GetDefWithPrefix, GetReferencesKeys, GetReferencesKeysWithPrefix } from 'schema-type';
+import type { JSONSchema7, JSONSchema7Definition, GetDef, GetDefWithPrefix, GetReferencesKeys, GetReferencesKeysWithPrefix } from 'schema-type';
 
+// Define as Record but key is ignored (you must specify key by `$id`).
 const refs = {
 	Id: {
 		$id: 'https://example.com/schemas/Id',
@@ -45,14 +46,39 @@ const refs = {
 			fileIds: { $ref: 'https://example.com/schemas/Id' },
 		},
 	},
-} as const;
+} as const satisfies Record<string, JSONSchema7Definition>;
 type Refs = typeof refs;
 
-type Def<x extends GetReferencesKeys<typeof refs>> = GetDef<GetReferences<typeof refs>, x>;
-type Packed<x extends GetReferencesKeysWithPrefix<typeof refs, 'https://example.com/schemas/'>> = GetDefWithPrefix<GetReferences<typeof refs>, 'https://example.com/schemas/', x>;
+export type Def<x extends GetRefsKeys<typeof refs>> = GetDef<GetRefs<typeof refs>, x>;
+export type Packed<x extends GetRefsKeys<typeof refs, 'https://example.com/schemas/'>> = GetDef<GetRefs<typeof refs>, x, 'https://example.com/schemas/'>;
 
-expectType<Def<'/schemas/Id'>>('string');
-expectType<Packed<'Id'>>('string');
+type Id = Def<'https://example.com/schemas/Id'> | Packed<'Id'>;
+```
+
+### 
+```typescript
+import type { ..., SchemaType } from 'schema-type';
+
+const refs = {
+	// ...
+} as const satisfies Record<string, JSONSchema7>;
+type Refs = typeof refs;
+
+const userSchema = {
+	type: 'object',
+	properties: {
+		id: { $ref: 'https://example.com/schemas/Id' },
+		notes: {
+			type: 'array',
+			items: { $ref: 'https://example.com/schemas/Note' },
+		},
+	},
+	required: ['id', 'notes'],
+} as const satisfies JSONSchema7;
+
+export type MySchemaType<S extends JSONSchema7> = SchemaTypeGen<S, GetReferences<Refs>>;
+
+type User = MySchemaType<typeof userSchema>;
 ```
 
 ## Features

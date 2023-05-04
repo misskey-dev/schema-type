@@ -42,7 +42,7 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { type: 'string' },
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string' });
 			expectType<S>({});
@@ -70,7 +70,7 @@ describe('SchemaType', () => {
 					foo: { type: 'string' },
 				},
 				required: ['foo'],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string' });
 			expectNotType<S>({});
@@ -83,7 +83,7 @@ describe('SchemaType', () => {
 					{ type: 'string' },
 					{ type: 'number' },
 				],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>('string');
 			expectType<S>(123);
@@ -95,7 +95,7 @@ describe('SchemaType', () => {
 					{ type: 'string' },
 					{ type: 'number' },
 				],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>('string');
 			expectType<S>(123);
@@ -113,7 +113,7 @@ describe('SchemaType', () => {
 					{ required: ['fuga'] },
 				],
 				required: []
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ hoge: 'string' });
 			expectType<S>({ fuga: 'string' });
@@ -137,7 +137,7 @@ describe('SchemaType', () => {
 						},
 					},
 				],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ hoge: 'string', fuga: 'string' });
 			expectNotType<S>({});
@@ -151,7 +151,7 @@ describe('SchemaType', () => {
 						{ type: 'string' },
 					]
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>(['string', 'string']);
 			expectNotType<S>([]);
@@ -165,7 +165,7 @@ describe('SchemaType', () => {
 						{ type: 'null' },
 					]
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>(['string', 'string']);
 			expectNotType<S>([]);
@@ -179,7 +179,7 @@ describe('SchemaType', () => {
 						{ type: 'null' },
 					]
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>(['string', 'string']);
 			expectNotType<S>([]);
@@ -198,7 +198,7 @@ describe('SchemaType', () => {
 						{ required: ['fuga'] },
 					],
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>([{ hoge: 'string' }]);
 			expectNotType<S>([]);
@@ -214,7 +214,7 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { $ref: '#/$defs/bar' },
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string' });
 			expectNotType<S>({});
@@ -229,7 +229,7 @@ describe('SchemaType', () => {
 					foo: { $ref: '#/$defs/bar' },
 				},
 				required: ['foo'],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string' });
 			expectNotType<S>({});
@@ -241,7 +241,7 @@ describe('SchemaType', () => {
 				},
 				type: 'array',
 				items: { $ref: '#/$defs/foo' },
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>(['string']);
 			expectNotType<S>([]);
@@ -264,7 +264,7 @@ describe('SchemaType', () => {
 						},
 					},
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: 'string', bar: { bar: 'string' } });
 			expectNotType<S>({});
@@ -275,7 +275,7 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { $ref: '#' },
 				},
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { foo: { foo: {} } } });
 			expectNotType<S>({});
@@ -287,7 +287,7 @@ describe('SchemaType', () => {
 					foo: { $ref: '#' },
 				},
 				required: ['foo'],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { foo: { foo: {} } } });
 			expectNotType<S>({});
@@ -309,7 +309,7 @@ describe('SchemaType', () => {
 					foo: { $ref: '#/$defs/bar' },
 				},
 				required: ['foo'],
-			} as const;
+			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { bar: { bar: {} } } });
 			expectNotType<S>({});
@@ -345,14 +345,18 @@ describe('SchemaType', () => {
 							type: 'array',
 							items: { $ref: 'https://example.com/schemas/Id' },
 						},
+						replies: {
+							type: 'array',
+							items: { $ref: 'https://example.com/schemas/Note' },
+						}
 					},
-					required: ['text'],
+					required: ['text', 'replies'],
 				},
-			} as const;
+			} as const satisfies Record<string, _.JSONSchema7Definition>;
 			type Refs = typeof refs;
 
-			type Def<x extends _.GetReferencesKeys<Refs>> = _.GetDef<_.GetReferences<Refs>, x>;
-			type Packed<x extends _.GetReferencesKeysWithPrefix<Refs, 'https://example.com/schemas/'>> = _.GetDefWithPrefix<_.GetReferences<Refs>, 'https://example.com/schemas/', x>;
+			type Def<x extends _.GetRefsKeys<Refs>> = _.GetDef<_.GetRefs<Refs>, x>;
+			type Packed<x extends _.GetRefsKeys<Refs, 'https://example.com/schemas/'>> = _.GetDef<_.GetRefs<Refs>, x, 'https://example.com/schemas/'>;
 
 			expectType<Def<'https://example.com/schemas/Id'>>('string');
 			expectNotAssignable<Packed<'Note'>>('aaa');
@@ -365,12 +369,17 @@ describe('SchemaType', () => {
 					id: { $ref: 'https://example.com/schemas/Id' },
 					notes: {
 						type: 'array',
-						//items: { $ref: 'https://example.com/schemas/Note' },
+						items: { $ref: 'https://example.com/schemas/Note' },
 					},
 				},
 				required: ['id', 'notes'],
-			} as const;
-			type SchemaType = _.SchemaType<typeof schema, Refs>;
+			} as const satisfies _.JSONSchema7;
+
+			type SchemaType<S extends _.JSONSchema7> = _.SchemaType<S, _.GetRefs<Refs>>;
+			type User = SchemaType<typeof schema>;
+
+			expectType<User>({ id: 'string', notes: [] });
+			expectType<User>({ id: 'string', notes: [{ text: 'string', poll: [{ text: 'string', count: 1 }], fileIds: ['string'], replies: [] }] });
 		});
 	});
 });
