@@ -225,7 +225,7 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { $ref: '#' },
 				},
-				//required: ['foo'],
+				required: ['foo'],
 			} as const;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { foo: { foo: {} } } });

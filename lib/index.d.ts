@@ -3,10 +3,12 @@ import type { JSONSchema7Type, JSONSchema7TypeName, JSONSchema7 as OriginalSchem
 
 export type JSONSchema7 = OriginalSchema7 | DeepReadonly<OriginalSchema7>;
 
-type ExtractOrAny<T, U> = T extends U ? T : any;
+type Extract<T, U> = T extends U ? T : any;
 
-export type GetDefWithPrefix<R extends JSONSchema7[], p extends string, x extends string> = `${p}${x}` extends R[number]['$id'] ? SchemaType<ExtractOrAny<R[number], { $id: `${p}${x}` }>, R> : never;
-export type GetDef<R extends JSONSchema7[], x extends R[number]['$id']> = SchemaType<ExtractOrAny<R[number], { $id: x }>, R>;
+// https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
+// To get union, we use `Foo extends any ? Hoge<Foo> : never`
+export type GetDefWithPrefix<R extends JSONSchema7[], p extends string, x extends string, r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends `${p}${x}` ? SchemaType<r, R> : never : never;
+export type GetDef<R extends JSONSchema7[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends x ? SchemaType<r, R> : never : never;
 
 // https://swagger.io/specification/?sbsearch=optional#schema-object
 type OfSchema = {
@@ -17,16 +19,19 @@ type OfSchema = {
 
 export type Obj = Record<string, JSONSchema7>;
 
-type ProhibitInfinitRoop<s extends Obj, K extends keyof s, R extends JSONSchema7[], T extends JSONSchema7 = s[K]> =
-	Extract<R[number], { $id: T['$ref']; type: 'object' }> extends never ? K : never;
+// Prohibit items with `$ref` to be required
+type InfinitProhibitedDef<R extends JSONSchema7[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> =
+	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
+type PreventInfinitRoop<s extends Obj, K extends keyof s, R extends JSONSchema7[], T extends JSONSchema7 = s[K]> =
+	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
 export type ObjType<s extends Obj, RequiredProps extends ReadonlyArray<keyof s>, R extends JSONSchema7[]> =
 	UnionToIntersection<
-		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> } |
-		{ -readonly [Q in ProhibitInfinitRoop<s, RequiredProps[number], R>]-?: ChildSchemaType<s[Q], R> }
+		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> } &
+		{ -readonly [Q in PreventInfinitRoop<s, RequiredProps[number], R>]-?: ChildSchemaType<s[Q], R> }
 	>;
 
 // https://qiita.com/ssssota/items/7e05f05b57e71dfe1cf9
