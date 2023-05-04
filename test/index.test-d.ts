@@ -142,6 +142,48 @@ describe('SchemaType', () => {
 			expectType<S>({ hoge: 'string', fuga: 'string' });
 			expectNotType<S>({});
 		});
+		test('allOf array', () => {
+			const s = {
+				type: 'array',
+				items: {
+					allOf: [
+						{ type: 'string' },
+						{ type: 'string' },
+					]
+				},
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>(['string', 'string']);
+			expectNotType<S>([]);
+		});
+		test('oneOf array', () => {
+			const s = {
+				type: 'array',
+				items: {
+					oneOf: [
+						{ type: 'string' },
+						{ type: 'null' },
+					]
+				},
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>(['string', 'string']);
+			expectNotType<S>([]);
+		});
+		test('anyOf array', () => {
+			const s = {
+				type: 'array',
+				items: {
+					anyOf: [
+						{ type: 'string' },
+						{ type: 'null' },
+					]
+				},
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>(['string', 'string']);
+			expectNotType<S>([]);
+		});
 	});
 	describe('$defs', () => {
 		test('string', () => {
@@ -230,6 +272,57 @@ describe('SchemaType', () => {
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>({ foo: { foo: { foo: {} } } });
 			expectNotType<S>({});
+		});
+		test('recursive required', () => {
+			const s = {
+				$defs: {
+					bar: {
+						type: 'object',
+						properties: {
+							bar: {
+								$ref: '#/$defs/bar'
+							},
+						},
+					}
+				},
+				type: 'object',
+				properties: {
+					foo: { $ref: '#/$defs/bar' },
+				},
+				required: ['foo'],
+			} as const;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: { bar: { bar: {} } } });
+			expectNotType<S>({});
+		});
+	});
+	describe('def', () => {
+		test('def', () => {
+			const refs = {
+				Id: {
+					$id: 'https://example.com/schemas/Id',
+					type: 'string',
+				},
+				Note: {
+					$id: 'https://example.com/schemas/Note',
+					type: 'object',
+					properties: {
+						text: { type: 'string' },
+						fileIds: {
+							type: 'array',
+							items: { $ref: 'https://example.com/schemas/Id' },
+						},
+					},
+					required: ['text'],
+				},
+			} as const;
+			type Refs = typeof refs;
+
+			type Def<x extends _.GetReferencesKeys<Refs>> = _.GetDef<_.GetReferences<Refs>, x>;
+			type Packed<x extends _.GetReferencesKeysWithPrefix<Refs, 'https://example.com/schemas/'>> = _.GetDefWithPrefix<_.GetReferences<Refs>, 'https://example.com/schemas/', x>;
+
+			expectType<Def<'https://example.com/schemas/Id'>>('string');
+			expectNotAssignable<Packed<'Note'>>('aaa');
 		});
 	});
 });

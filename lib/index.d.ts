@@ -7,15 +7,12 @@ type Extract<T, U> = T extends U ? T : any;
 
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
-export type GetDefWithPrefix<R extends JSONSchema7[], p extends string, x extends string, r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends `${p}${x}` ? SchemaType<r, R> : never : never;
+export type GetPrefixKeys<R extends JSONSchema7[], p extends string> = R[number]['$id'] extends `${p}${infer x}` ? x : never;
+export type GetDefWithPrefix<R extends JSONSchema7[], p extends string, x extends GetPrefixKeys<R, p>, r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends `${p}${x}` ? SchemaType<r, R> : never : never;
 export type GetDef<R extends JSONSchema7[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends x ? SchemaType<r, R> : never : never;
-
-// https://swagger.io/specification/?sbsearch=optional#schema-object
-type OfSchema = {
-	readonly anyOf?: ReadonlyArray<JSONSchema7>;
-	readonly oneOf?: ReadonlyArray<JSONSchema7>;
-	readonly allOf?: ReadonlyArray<JSONSchema7>;
-}
+export type GetReferences<Rs extends Record<string, JSONSchema7>> = UnionToArray<Rs[keyof Rs]>;
+export type GetReferencesKeys<Rs extends Record<string, JSONSchema7>> = Rs[keyof Rs]['$id'];
+export type GetReferencesKeysWithPrefix<Rs extends Record<string, JSONSchema7>, p extends string> = Rs[keyof Rs]['$id'] extends `${p}${infer x}` ? x : never;
 
 export type Obj = Record<string, JSONSchema7>;
 
@@ -57,12 +54,11 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 type UnionSchemaType<a extends readonly any[], R extends JSONSchema7[], X extends JSONSchema7 = a[number]> = X extends any ? ChildSchemaType<X, R> : never;
 type UnionObjType<s extends Obj, a extends readonly (keyof s)[], R extends JSONSchema7[]> = a extends any ? ObjType<s, a, R> : never;
 type UnionType<Ts extends ReadonlyArray<JSONSchema7TypeName>, T extends JSONSchema7TypeName = Ts[number]> = Ts extends any ? TypeNameToType<T> : never;
-type ArrayUnion<T> = T extends any ? Array<T> : never;
 export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
 export type UnionToArray<T, A extends unknown[] = []> = T extends any ? [T, ...A] : never;
 export type RecordToArray<T extends Record<string, any>> = UnionToArray<RecordToUnion<T>>;
 
-type DefsToDefUnion<T extends Obj, K extends keyof T = keyof T> = T[K] extends JSONSchema7 ? K extends string ? (T[K] & { $id: `#/$defs/${K}` }) : never : never;
+type DefsToDefUnion<T extends Obj, K extends keyof T = keyof T> = T[K] extends JSONSchema7 ? K extends string ? ({ $id: `#/$defs/${K}` } & T[K]) : never : never;
 
 type GenReferences<R extends JSONSchema7[], p extends JSONSchema7> =
 	p['$defs'] extends Obj ? [...R, ...UnionToArray<DefsToDefUnion<p['$defs']>>] :
@@ -101,12 +97,6 @@ export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7[]> =
 	p['type'] extends ('null' | 'integer' | 'number' | 'boolean') ? TypeNameToType<p['type']> :
 	p['type'] extends 'object' ? ObjectSchemaTypeDef<p, GenReferences<R, p>> :
 	p['type'] extends 'array' ? (
-		p['items'] extends OfSchema ? (
-			p['items']['anyOf'] extends ReadonlyArray<JSONSchema7> ? UnionSchemaType<NonNullable<p['items']['anyOf']>, GenReferences<R, p>>[] :
-			p['items']['oneOf'] extends ReadonlyArray<JSONSchema7> ? ArrayUnion<UnionSchemaType<NonNullable<p['items']['oneOf']>, GenReferences<R, p>>> :
-			p['items']['allOf'] extends ReadonlyArray<JSONSchema7> ? UnionToIntersection<UnionSchemaType<NonNullable<p['items']['allOf']>, GenReferences<R, p>>>[] :
-			never
-		) :
 		p['items'] extends NonNullable<JSONSchema7> ? ChildSchemaType<p['items'], GenReferences<R, p>>[] :
 		any[]
 	) :
