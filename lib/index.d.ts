@@ -9,20 +9,20 @@ type Extract<T, U> = T extends U ? T : any;
 
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
-export type GetDef<Rs extends JSONSchema7Definition[], x extends GetKeys<Rs, p>, p extends string = '', R extends Rs[number] = Rs[number]> =
+export type GetDef<References extends JSONSchema7Definition[], Key extends GetKeys<References, Prefix>, Prefix extends string = '', R extends References[number] = References[number]> =
 	R extends any ?
-	`${p}${x}` extends R['$id'] ?
-		SchemaType<R, Rs> :
-		`${p}${x}` extends `${R['$id']}#/$defs/${infer D}` ?
-			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? SchemaType<R['$defs'][D], Rs>
+	`${Prefix}${Key}` extends R['$id'] ?
+		SchemaType<R, References> :
+		`${Prefix}${Key}` extends `${R['$id']}#/$defs/${infer D}` ?
+			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? SchemaType<R['$defs'][D], References>
 			: never : never : never
 	: never;
-export type GetRefs<Rs extends Record<string, JSONSchema7Definition>> =
-	UnionToArray<Rs[keyof Rs]>;
+export type GetRefs<ReferencesRecord extends Record<string, JSONSchema7Definition>> =
+	UnionToArray<ReferencesRecord[keyof ReferencesRecord]>;
 
-export type GetKeys<Rs extends JSONSchema7Definition[], p extends string = '', R extends Rs[number] = Rs[number]> = 
+export type GetKeys<References extends JSONSchema7Definition[], p extends string = '', R extends References[number] = References[number]> = 
 	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
-export type GetRefsKeys<Rs extends Record<string, JSONSchema7Definition>, p extends string = '', R extends JSONSchema7 = Rs[keyof Rs]> =
+export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Definition>, p extends string = '', R extends JSONSchema7 = ReferencesRecord[keyof ReferencesRecord]> =
 	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
 
 export type Obj = Record<string, JSONSchema7>;

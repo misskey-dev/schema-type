@@ -28,7 +28,7 @@ const schema = {
 type MyString = SchemaType<typeof schema>; // will `string`
 ```
 
-### Storing and calling references
+### Storing and calling global references
 ```typescript
 import type { JSONSchema7, JSONSchema7Definition, GetDef, GetDefWithPrefix, GetReferencesKeys, GetReferencesKeysWithPrefix } from 'schema-type';
 
@@ -39,23 +39,49 @@ const refs = {
 		type: 'string',
 	},
 	Note: {
+		$defs: {
+			poll: {
+				type: 'array',
+				items: {
+					type: 'object',
+					properties: {
+						text: { type: 'string' },
+						count: { type: 'number' },
+					},
+				},
+				required: ['text', 'count'],
+			}
+		},
 		$id: 'https://example.com/schemas/Note',
 		type: 'object',
 		properties: {
 			text: { type: 'string' },
-			fileIds: { $ref: 'https://example.com/schemas/Id' },
+			poll: { $ref: '#/$defs/poll' },
+			fileIds: {
+				type: 'array',
+				items: { $ref: 'https://example.com/schemas/Id' },
+			},
+			replies: {
+				type: 'array',
+				items: { $ref: 'https://example.com/schemas/Note' },
+			}
 		},
+		required: ['text', 'replies'],
 	},
 } as const satisfies Record<string, JSONSchema7Definition>;
 type Refs = typeof refs;
 
-export type Def<x extends GetRefsKeys<typeof refs>> = GetDef<GetRefs<typeof refs>, x>;
-export type Packed<x extends GetRefsKeys<typeof refs, 'https://example.com/schemas/'>> = GetDef<GetRefs<typeof refs>, x, 'https://example.com/schemas/'>;
+// GetDef<References (global references) extends JSONSchema7Definition[], Key[, Prefix]>
+export type Def<x extends GetRefsKeys<Refs>> = GetDef<GetRefs<Refs>, x>;
+
+// With prefix
+export type Packed<x extends GetRefsKeys<Refs, 'https://example.com/schemas/'>> = GetDef<GetRefs<Refs>, x, 'https://example.com/schemas/'>;
 
 type Id = Def<'https://example.com/schemas/Id'> | Packed<'Id'>;
+type Poll = Def<'https://example.com/schemas/Note#/$defs/poll'> | Packed<'Note#/$defs/poll'>;
 ```
 
-### 
+### Create a type with global references
 ```typescript
 import type { ..., SchemaType } from 'schema-type';
 
@@ -76,7 +102,8 @@ const userSchema = {
 	required: ['id', 'notes'],
 } as const satisfies JSONSchema7;
 
-export type MySchemaType<S extends JSONSchema7> = SchemaTypeGen<S, GetReferences<Refs>>;
+// Create a type with preset References
+export type MySchemaType<S extends JSONSchema7> = SchemaType<S, GetRefs<Refs>>;
 
 type User = MySchemaType<typeof userSchema>;
 ```
@@ -99,7 +126,7 @@ type User = MySchemaType<typeof userSchema>;
 
 - [x] Reading an array of global references
 - [x] `$defs` (Defining $def in a nested property will still result in a root e.g. `#/$defs/hoge`)
-- [x] `$ref` to $def and global refeerences
+- [x] `$ref` to $def and global references
 - [x] Circular reference `$ref` (If the $ref target is an object or an array, the item will be no longer `required`.)
 - [ ] `$dynamicRef`
 - [ ] `$anchor`, `$dynamicAnchor`
