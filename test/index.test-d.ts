@@ -323,10 +323,24 @@ describe('SchemaType', () => {
 					type: 'string',
 				},
 				Note: {
+					$defs: {
+						poll: {
+							type: 'array',
+							items: {
+								type: 'object',
+								properties: {
+									text: { type: 'string' },
+									count: { type: 'number' },
+								},
+							},
+							required: ['text', 'count'],
+						}
+					},
 					$id: 'https://example.com/schemas/Note',
 					type: 'object',
 					properties: {
 						text: { type: 'string' },
+						poll: { $ref: '#/$defs/poll' },
 						fileIds: {
 							type: 'array',
 							items: { $ref: 'https://example.com/schemas/Id' },
@@ -342,6 +356,21 @@ describe('SchemaType', () => {
 
 			expectType<Def<'https://example.com/schemas/Id'>>('string');
 			expectNotAssignable<Packed<'Note'>>('aaa');
+			expectNotAssignable<Packed<'Note#/$defs/poll'>>('aaa');
+			expectAssignable<Def<'https://example.com/schemas/Note#/$defs/poll'>>([{ text: 'string', count: 1 }]);
+
+			const schema = {
+				type: 'object',
+				properties: {
+					id: { $ref: 'https://example.com/schemas/Id' },
+					notes: {
+						type: 'array',
+						//items: { $ref: 'https://example.com/schemas/Note' },
+					},
+				},
+				required: ['id', 'notes'],
+			} as const;
+			type SchemaType = _.SchemaType<typeof schema, Refs>;
 		});
 	});
 });

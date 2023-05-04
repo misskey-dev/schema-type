@@ -7,12 +7,34 @@ type Extract<T, U> = T extends U ? T : any;
 
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
-export type GetPrefixKeys<R extends JSONSchema7[], p extends string> = R[number]['$id'] extends `${p}${infer x}` ? x : never;
-export type GetDefWithPrefix<R extends JSONSchema7[], p extends string, x extends GetPrefixKeys<R, p>, r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends `${p}${x}` ? SchemaType<r, R> : never : never;
-export type GetDef<R extends JSONSchema7[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> = r extends any ? r['$id'] extends x ? SchemaType<r, R> : never : never;
-export type GetReferences<Rs extends Record<string, JSONSchema7>> = UnionToArray<Rs[keyof Rs]>;
-export type GetReferencesKeys<Rs extends Record<string, JSONSchema7>> = Rs[keyof Rs]['$id'];
-export type GetReferencesKeysWithPrefix<Rs extends Record<string, JSONSchema7>, p extends string> = Rs[keyof Rs]['$id'] extends `${p}${infer x}` ? x : never;
+export type GetDefWithPrefix<Rs extends JSONSchema7[], p extends string, x extends GetPrefixKeys<Rs, p>, R extends Rs[number] = Rs[number]> =
+	R extends any ?
+	`${p}${x}` extends R['$id'] ?
+		SchemaType<R, Rs> :
+		`${p}${x}` extends `${R['$id']}#/$defs/${infer D}` ?
+			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? SchemaType<R['$defs'][D], Rs>
+			: never : never : never
+	: never;
+export type GetDef<Rs extends JSONSchema7[], x extends GetKeys<Rs>, R extends Rs[number] = Rs[number]> =
+	R extends any ?
+	x extends R['$id'] ?
+		SchemaType<R, Rs> :
+		x extends `${R['$id']}#/$defs/${infer D}` ?
+			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? SchemaType<R['$defs'][D], Rs>
+			: never : never : never
+	: never;
+export type GetReferences<Rs extends Record<string, JSONSchema7>> =
+	UnionToArray<Rs[keyof Rs]>;
+
+export type GetKeys<Rs extends JSONSchema7[], R extends Rs[number] = Rs[number]> =
+	R extends any ? R['$id'] | (keyof R['$defs'] extends string ? `${R['$id']}#/$defs/${keyof R['$defs']}` : never) : never;
+export type GetReferencesKeys<Rs extends Record<string, JSONSchema7>, R extends JSONSchema7 = Rs[keyof Rs]> =
+	R extends any ? R['$id'] | (keyof R['$defs'] extends string ? `${R['$id']}#/$defs/${keyof R['$defs']}` : never) : never;
+
+export type GetPrefixKeys<Rs extends JSONSchema7[], p extends string, R extends Rs[number] = Rs[number]> = 
+	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
+export type GetReferencesKeysWithPrefix<Rs extends Record<string, JSONSchema7>, p extends string, R extends JSONSchema7 = Rs[keyof Rs]> =
+	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
 
 export type Obj = Record<string, JSONSchema7>;
 
@@ -21,14 +43,16 @@ type InfinitProhibitedDef<R extends JSONSchema7[], x extends R[number]['$id'], r
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
 type PreventInfinitRoop<s extends Obj, K extends keyof s, R extends JSONSchema7[], T extends JSONSchema7 = s[K]> =
 	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
+type AllowedKeys<s extends Obj, K extends keyof s, R extends JSONSchema7[], T extends JSONSchema7 = s[K]> =
+	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? K : never : K;
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
-export type ObjType<s extends Obj, RequiredProps extends ReadonlyArray<keyof s>, R extends JSONSchema7[]> =
+export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7[]> =
 	UnionToIntersection<
-		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> } &
-		{ -readonly [Q in PreventInfinitRoop<s, RequiredProps[number], R>]-?: ChildSchemaType<s[Q], R> }
+		{ -readonly [P in AllowedKeys<s, keyof s, R>]?: ChildSchemaType<s[P], R> } &
+		{ -readonly [Q in PreventInfinitRoop<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> }
 	>;
 
 // https://qiita.com/ssssota/items/7e05f05b57e71dfe1cf9
@@ -60,7 +84,6 @@ export type UnionToArray<T, A extends unknown[] = []> = T extends any ? [T, ...A
 export type RecordToArray<T extends Record<string, any>> = UnionToArray<RecordToUnion<T>>;
 
 type DefsToDefUnion<T extends Obj, K extends keyof T = keyof T> = T[K] extends JSONSchema7 ? K extends string ? ({ $id: `#/$defs/${K}` } & T[K]) : never : never;
-
 type GenReferences<R extends JSONSchema7[], p extends JSONSchema7> =
 	p['$defs'] extends Obj ? [...R, ...UnionToArray<DefsToDefUnion<p['$defs']>>] :
 	R;
@@ -88,7 +111,7 @@ type TypeNameToType<T extends JSONSchema7TypeName> =
 	any;
 
 export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7[]> =
-	p['$ref'] extends R[number]['$id'] ? GetDef<GenReferences<R, p>, p['$ref']> :
+	p['$ref'] extends GetKeys<R> ? GetDef<GenReferences<R, p>, p['$ref']> :
 	p['const'] extends JSONSchema7Type ? p['const'] :
 	p['enum'] extends ReadonlyArray<JSONSchema7Type> ? p['enum'][number] :
 	p['type'] extends 'string' ? (
