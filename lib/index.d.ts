@@ -5,8 +5,6 @@ import type { JSONSchema7Type, JSONSchema7TypeName, JSONSchema7 as OriginalSchem
 export type JSONSchema7 = OriginalSchema7 | DeepReadonly<OriginalSchema7>;
 export type JSONSchema7Definition = (OriginalSchema7 & { $id: string }) | DeepReadonly<OriginalSchema7 & { $id: string }>;
 
-type Extract<T, U> = T extends U ? T : any;
-
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
 export type GetDef<References extends JSONSchema7Definition[], Key extends GetKeys<References, Prefix>, Prefix extends string = '', R extends References[number] = References[number]> =
