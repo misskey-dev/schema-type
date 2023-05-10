@@ -64,7 +64,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
-type UnionSchemaType<a extends readonly any[], R extends JSONSchema7Definition[], X extends JSONSchema7 = a[number]> = X extends any ? ChildSchemaType<X, R> : never;
+type UnionSchemaType<a extends ReadonlyArray<JSONSchema7>, R extends JSONSchema7Definition[], X extends JSONSchema7 = a[number]> = X extends any ? ChildSchemaType<X, R> : never;
 type UnionObjType<s extends Obj, a extends readonly (keyof s)[], R extends JSONSchema7Definition[]> = a extends any ? ObjType<s, a, R> : never;
 type UnionType<Ts extends ReadonlyArray<JSONSchema7TypeName>, T extends JSONSchema7TypeName = Ts[number]> = Ts extends any ? TypeNameToType<T> : never;
 
