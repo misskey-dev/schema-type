@@ -87,6 +87,7 @@ type ObjectSchemaTypeDef<p extends JSONSchema7, R extends JSONSchema7Definition[
 	:
 	p['anyOf'] extends ReadonlyArray<JSONSchema7> ? never : // see README.md
 	p['allOf'] extends ReadonlyArray<JSONSchema7> ? AllOfSchema<p['allOf'], GenReferences<R, p>> :
+	p['oneOf'] extends ReadonlyArray<JSONSchema7> ? UnionSchemaType<p['oneOf'], GenReferences<R, p>> : // But `oneOf` in object is not recommended
 	any
 
 type TypeNameToType<T extends JSONSchema7TypeName> =
