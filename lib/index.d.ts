@@ -25,13 +25,14 @@ export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Defin
 
 export type Obj = Record<string, JSONSchema7>;
 
-// Prohibit items with `$ref` to be required
+// Items with `$ref` to prohibit to be required
 type InfinitProhibitedDef<R extends JSONSchema7Definition[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> =
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
 type RequiredKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
 	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
 type OptionalKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
 	P extends K ?
+		// Pick properties prohibited with `$ref`
 		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
 	: P;
 
