@@ -40,10 +40,10 @@ type AllowedKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definiti
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
 export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[]> =
 	RP extends NonNullable<ReadonlyArray<keyof s>> ?
-		UnionToIntersection<
-			{ -readonly [P in AllowedKeys<s, RP[number], R>]?: ChildSchemaType<s[P], R> } &
-			{ -readonly [Q in PreventInfinitRoop<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> }
-		>
+		//UnionToIntersection<
+			{ -readonly [Q in PreventInfinitRoop<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> } &
+			{ -readonly [P in AllowedKeys<s, RP[number], R>]?: ChildSchemaType<s[P], R> }
+		//>
 	:
 		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> }
 	;
