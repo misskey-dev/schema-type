@@ -30,17 +30,23 @@ type InfinitProhibitedDef<R extends JSONSchema7Definition[], x extends R[number]
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
 type PreventInfinitRoop<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
 	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
-//type AllowedKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
-//	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? K : never : K;
+type AllowedKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
+	P extends K ?
+		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
+	: P;
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
 export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[]> =
-	UnionToIntersection<
-		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> } &
-		{ -readonly [Q in PreventInfinitRoop<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> }
-	>;
+	RP extends NonNullable<ReadonlyArray<keyof s>> ?
+		UnionToIntersection<
+			{ -readonly [P in AllowedKeys<s, RP[number], R>]?: ChildSchemaType<s[P], R> } &
+			{ -readonly [Q in PreventInfinitRoop<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> }
+		>
+	:
+		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> }
+	;
 
 // https://qiita.com/ssssota/items/7e05f05b57e71dfe1cf9
 type AnyOfSchema<T extends ReadonlyArray<JSONSchema7>, R extends JSONSchema7Definition[]> =
