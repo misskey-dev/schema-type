@@ -28,21 +28,27 @@ export type Obj = Record<string, JSONSchema7>;
 // Items with `$ref` to prohibit to be required
 type InfinitProhibitedDef<R extends JSONSchema7Definition[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> =
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
-type RequiredKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
+type RequiredKey<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
 	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
-type OptionalKeys<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
-	P extends K ?
+type OptionalKey<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
+	P extends RP[number] ?
 		// Pick properties prohibited with `$ref`
 		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
 	: P;
+
+type UnwindProjected<t, T extends readonly [unknown] = [t]> = {
+	[K in keyof T[0]]: T[0][K];
+}
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
 export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[]> =
 	RP extends NonNullable<ReadonlyArray<keyof s>> ?
-		{ -readonly [Q in RequiredKeys<s, RP[number], R>]-?: ChildSchemaType<s[Q], R> } &
-		{ -readonly [P in OptionalKeys<s, RP[number], R>]?: ChildSchemaType<s[P], R> }
+		UnwindProjected<
+			{ -readonly [Q in RP[number] as RequiredKey<s, Q, R>]-?: ChildSchemaType<s[Q], R> } &
+			{ -readonly [P in keyof s as OptionalKey<s, RP, R, P>]?: ChildSchemaType<s[P], R> }
+		>
 	:
 		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> }
 	;
