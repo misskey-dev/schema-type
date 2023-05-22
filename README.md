@@ -167,4 +167,20 @@ export const schema = {
 } as const;
 ```
 
-### $ref
+### stringのformatと`Serialized<T>`, `WeakSerialized<T>`
+`type: string`のとき、formatに`date`,`date-time`が指定されていた場合は`Date`、`binary`の場合は`RelativeIndexable<number>`となります。
+
+`string`に変換したい場合は`Serialized<T>`、`string | Date`のように両方を許容・推測したい場合は`WeakSerialized<T>`でラップします。
+
+```typescript
+import type { SchemaType, JSONSchema7, Serialized, WeakSerialized } from 'schema-type';
+
+const schema = {
+	type: 'string',
+	format: 'date-time',
+} as const satisfies JSONSchema7;
+
+type D = SchemaType<typeof schema>; // Date
+type SD = Serialized<D>;            // string
+type WSD = WeakSerialized<D>        // string | Date
+```

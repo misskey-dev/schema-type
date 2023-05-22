@@ -201,7 +201,7 @@ describe('SchemaType', () => {
 			} as const satisfies _.JSONSchema7;
 			type S = _.SchemaType<typeof s, []>;
 			expectType<S>([{ hoge: 'string' }]);
-			expectNotType<S>([]);
+			expectNotType<S>([{}]);
 		});
 	});
 	describe('$defs', () => {
@@ -381,6 +381,89 @@ describe('SchemaType', () => {
 
 			expectType<User>({ id: 'string', notes: [] });
 			expectType<User>({ id: 'string', notes: [{ text: 'string', poll: [{ text: 'string', count: 1 }], fileIds: ['string'], replies: [] }] });
+		});
+	});
+	describe('serialization', () => {
+		test('date', () => {
+			const s = {
+				type: 'string',
+				format: 'date',
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>(new Date());
+			expectNotType<S>('string');
+
+			type SS = _.Serialized<S>;
+			expectType<SS>('string');
+			expectNotType<SS>(new Date());
+
+			type SSW = _.WeakSerialized<S>;
+			expectType<SSW>('string');
+			expectType<SSW>(new Date());
+		});
+		test('binary', () => {
+			const s = {
+				type: 'string',
+				format: 'binary',
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>(new Uint8Array());
+			expectNotType<S>('string');
+
+			type SS = _.Serialized<S>;
+			expectType<SS>('string');
+			expectNotType<SS>(new Uint8Array());
+
+			type SSW = _.WeakSerialized<S>;
+			expectType<SSW>('string');
+			expectType<SSW>(new Uint8Array());
+		});
+		test('array', () => {
+			const s = {
+				type: 'array',
+				items: {
+					type: 'string',
+					format: 'date',
+				},
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>([new Date()]);
+			expectNotType<S>(['string', 1]);
+
+			type SS = _.Serialized<S>;
+			expectType<SS>(['string']);
+			expectNotType<SS>([new Date()]);
+
+			type SSW = _.WeakSerialized<S>;
+			expectType<SSW>(['string']);
+			expectType<SSW>([new Date()]);
+		});
+		test('record', () => {
+			const s = {
+				type: 'object',
+				properties: {
+					foo: {
+						type: 'string',
+						format: 'date-time',
+					},
+					bar: {
+						type: 'string',
+						format: 'binary'
+					}
+				},
+				required: ['foo'],
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: new Date() });
+			expectNotType<S>({ foo: 'string' });
+
+			type SS = _.Serialized<S>;
+			expectType<SS>({ foo: 'string' });
+			expectNotType<SS>({ foo: new Date() });
+
+			type SSW = _.WeakSerialized<S>;
+			expectType<SSW>({ foo: 'string' });
+			expectType<SSW>({ foo: new Date() });
 		});
 	});
 });

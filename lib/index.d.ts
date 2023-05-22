@@ -25,25 +25,65 @@ export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Defin
 
 export type Obj = Record<string, JSONSchema7>;
 
+export type Serialized<T> = 
+	T extends Date
+		? string
+		: T extends (Date | null)
+			? (string | null)
+	: T extends RelativeIndexable<number>
+		? string
+		: T extends (RelativeIndexable<number> | null)
+			? (string | null)
+	: T extends Record<string, any>
+		? { [K in keyof T]: Serialized<T[K]> }
+		: T extends (Record<string, any> | null)
+			? ({ [K in keyof T]: Serialized<T[K]> } | null)
+			: T extends (Array<infer U> | ReadonlyArray<infer U>)
+				? Array<Serialized<U>>
+				: T extends ((Array<infer U> | null) | (ReadonlyArray<infer U> | null))
+					? (Array<Serialized<U>> | null)
+	: T;
+
+export type WeakSerialized<T> = 
+	T extends Date
+		? T | string
+		: T extends (Date | null)
+			? (T | string | null)
+	: T extends RelativeIndexable<number>
+		? T | string
+		: T extends (RelativeIndexable<number> | null)
+			? (T | string | null)
+	: T extends Record<string, any>
+		? { [K in keyof T]: T[K] | Serialized<T[K]> }
+		: T extends (Record<string, any> | null)
+			? ({ [K in keyof T]: T[K] | Serialized<T[K]> } | null)
+			: T extends (Array<infer U> | ReadonlyArray<infer U>)
+				? Array<U | Serialized<U>>
+				: T extends ((Array<infer U> | null) | (ReadonlyArray<infer U> | null))
+					? (Array<U | Serialized<U>> | null)
+	: T;
+
 // Items with `$ref` to prohibit to be required
 type InfinitProhibitedDef<R extends JSONSchema7Definition[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> =
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
 type RequiredKey<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
 	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
-type OptionalKey<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
-	P extends RP[number] ?
+//type OptionalKey<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
+//	P extends RP[number] ?
 		// Pick properties prohibited with `$ref`
-		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
-	: P;
+//		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
+//	: P;
+
+type Projected<T> = T extends Record<string, any> ? { [K in keyof T]: T[K] } : T;
 
 // https://github.com/misskey-dev/misskey/issues/8535
 // To avoid excessive stack depth error,
 // deceive TypeScript with UnionToIntersection (or more precisely, `infer` expression within it).
 export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[]> =
-	RP extends NonNullable<ReadonlyArray<keyof s>> ?
-		{ -readonly [Q in RP[number] as RequiredKey<s, Q, R>]-?: ChildSchemaType<s[Q], R> } &
-		{ -readonly [P in keyof s as OptionalKey<s, RP, R, P>]?: ChildSchemaType<s[P], R> }
-	:
+	RP extends NonNullable<ReadonlyArray<keyof s>> ? Projected<
+		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> } &
+		{ -readonly [Q in RP[number] as RequiredKey<s, Q, R>]-?: ChildSchemaType<s[Q], R> }
+	>:
 		{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R> }
 	;
 
@@ -108,7 +148,9 @@ export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7Definiti
 	p['const'] extends JSONSchema7Type ? p['const'] :
 	p['enum'] extends ReadonlyArray<JSONSchema7Type> ? p['enum'][number] :
 	p['type'] extends 'string' ? (
-		p['format'] extends 'date-time' ? string : // Dateにする？？
+		p['format'] extends 'date' ? Date :
+		p['format'] extends 'date-time' ? Date :
+		p['format'] extends 'binary' ? RelativeIndexable<number> :
 		string
 	) :
 	p['type'] extends ('null' | 'integer' | 'number' | 'boolean') ? TypeNameToType<p['type']> :
