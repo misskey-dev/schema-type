@@ -74,7 +74,7 @@ type RequiredKey<s extends Obj, K extends keyof s, R extends JSONSchema7Definiti
 //		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
 //	: P;
 type HasDefault<s extends Obj, K extends keyof s, T extends JSONSchema7 = s[K]> =
-	T['default'] extends never ? never : K;
+	T['default'] extends NonNullable<unknown> ? K : never;
 
 type Projected<T> = T extends Record<string, any> ? { [K in keyof T]: T[K] } : T;
 
