@@ -87,7 +87,7 @@ import type { ..., SchemaType } from 'schema-type';
 
 const refs = {
 	// ...
-} as const satisfies Record<string, JSONSchema7>;
+} as const satisfies Record<string, JSONSchema7Definition>;
 type Refs = typeof refs;
 
 const userSchema = {
