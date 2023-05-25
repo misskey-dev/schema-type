@@ -83,7 +83,8 @@ describe('SchemaType', () => {
 				properties: {
 					foo: { type: 'string', default: 'foo' },
 					bar: { type: 'string', default: 'bar' },
-					hoge: { type: 'string' }
+					hoge: { type: 'string' },
+					fuga: { type: ['string', 'null'], default: null }
 				},
 				required: ['bar'],
 			} as const satisfies _.JSONSchema7;
