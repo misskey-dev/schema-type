@@ -151,7 +151,7 @@ type TypeNameToType<T extends JSONSchema7TypeName> =
 	any;
 
 export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
-	p['$ref'] extends GetKeys<GenReferences<R, p>, ''> ? GetDef<GenReferences<R, p>, p['$ref']> :
+	p['$ref'] extends GetKeys<GenReferences<R, p>, ''> ? GetDef<GenReferences<R, p>, p['$ref'], IsResponse> :
 	p['const'] extends JSONSchema7Type ? p['const'] :
 	p['enum'] extends ReadonlyArray<JSONSchema7Type> ? p['enum'][number] :
 	p['type'] extends 'string' ? (
