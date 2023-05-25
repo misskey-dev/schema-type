@@ -76,6 +76,25 @@ describe('SchemaType', () => {
 			expectNotType<S>({});
 		});
 	});
+	describe('is response', () => {
+		test('is response', () => {
+			const s = {
+				type: 'object',
+				properties: {
+					foo: { type: 'string', default: 'foo' },
+					bar: { type: 'string', default: 'bar' },
+					hoge: { type: 'string' }
+				},
+				required: ['bar'],
+			} as const satisfies _.JSONSchema7;
+
+			type SReq = _.SchemaType<typeof s, [], false>;
+			expectType<SReq>({ bar: 'string' });
+
+			type SRes = _.SchemaType<typeof s, [], true>;
+			expectNotType<SRes>({ foo: 'string' });
+		});
+	});
 	describe('of', () => {
 		test('oneOf whole', () => {
 			const s = {
@@ -357,7 +376,7 @@ describe('SchemaType', () => {
 			type Refs = typeof refs;
 
 			type Def<x extends _.GetRefsKeys<Refs>> = _.GetDef<_.GetRefs<Refs>, x>;
-			type Packed<x extends _.GetRefsKeys<Refs, 'https://example.com/schemas/'>> = _.GetDef<_.GetRefs<Refs>, x, 'https://example.com/schemas/'>;
+			type Packed<x extends _.GetRefsKeys<Refs, 'https://example.com/schemas/'>> = _.GetDef<_.GetRefs<Refs>, x, false, 'https://example.com/schemas/'>;
 
 			expectType<Def<'https://example.com/schemas/Id'>>('string');
 			expectNotAssignable<Packed<'Note'>>('aaa');

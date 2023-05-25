@@ -71,11 +71,11 @@ const refs = {
 } as const satisfies Record<string, JSONSchema7Definition>;
 type Refs = typeof refs;
 
-// GetDef<References (global references) extends JSONSchema7Definition[], Key[, Prefix]>
+// GetDef<References (global references) extends JSONSchema7Definition[], Key[, IsResponse, Prefix]>
 export type Def<x extends GetRefsKeys<Refs>> = GetDef<GetRefs<Refs>, x>;
 
 // With prefix
-export type Packed<x extends GetRefsKeys<Refs, 'https://example.com/schemas/'>> = GetDef<GetRefs<Refs>, x, 'https://example.com/schemas/'>;
+export type Packed<x extends GetRefsKeys<Refs, 'https://example.com/schemas/'>> = GetDef<GetRefs<Refs>, x, false, 'https://example.com/schemas/'>;
 
 type Id = Def<'https://example.com/schemas/Id'> | Packed<'Id'>;
 type Poll = Def<'https://example.com/schemas/Note#/$defs/poll'> | Packed<'Note#/$defs/poll'>;
@@ -106,6 +106,38 @@ const userSchema = {
 export type MySchemaType<S extends JSONSchema7> = SchemaType<S, GetRefs<Refs>>;
 
 type User = MySchemaType<typeof userSchema>;
+```
+
+### Default handling
+
+IsResponseをtrueにすると、defaultを持つプロパティがrequired扱いになります。  
+If IsResponse is set to true, properties with default are treated as required.
+
+```typescript
+const s = {
+	type: 'object',
+	properties: {
+		foo: { type: 'string', default: 'foo' },
+		hoge: { type: 'string' }
+	},
+	required: [],
+} as const satisfies JSONSchema7;
+
+type Req = SchemaType<typeof s, [], false>;
+/*
+ * type Req = {
+ *    foo?: string | undefined;
+ *    hoge?: string | undefined;
+ * }
+ */
+
+type Res = SchemaType<typeof s, [], true>;
+/*
+ * type Res = {
+ *    bar: string;
+ *    hoge?: string | undefined;
+ * }
+ */
 ```
 
 ## Features
