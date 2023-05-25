@@ -111,7 +111,10 @@ type User = MySchemaType<typeof userSchema>;
 ### Default handling
 
 IsResponseをtrueにすると、defaultを持つプロパティがrequired扱いになります。  
-If IsResponse is set to true, properties with default are treated as required.
+検証・成形後の値を表すときに使えます。
+
+If IsResponse is set to true, properties with default are treated as required.  
+It can be used to represent a value after verification and molding.
 
 ```typescript
 const s = {
