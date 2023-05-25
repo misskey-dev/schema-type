@@ -137,7 +137,7 @@ type Req = SchemaType<typeof s, [], false>;
 type Res = SchemaType<typeof s, [], true>;
 /*
  * type Res = {
- *    bar: string;
+ *    foo: string;
  *    hoge?: string | undefined;
  * }
  */
