@@ -395,8 +395,8 @@ describe('SchemaType', () => {
 									text: { type: 'string' },
 									count: { type: 'number' },
 								},
+								required: ['text', 'count'],
 							},
-							required: ['text', 'count'],
 						}
 					},
 					$id: 'https://example.com/schemas/Note',
