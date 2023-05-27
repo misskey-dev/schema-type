@@ -315,14 +315,12 @@ describe('SchemaType', () => {
 			const s = {
 				$defs: {
 					foo: { type: 'string' },
+					bar: { type: 'string' },
 				},
 				type: 'object',
 				properties: {
 					foo: { $ref: '#/$defs/foo' },
 					bar: {
-						$defs: {
-							bar: { type: 'string' },
-						},
 						type: 'object',
 						properties: {
 							bar: { $ref: '#/$defs/bar' },

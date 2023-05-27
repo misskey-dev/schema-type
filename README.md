@@ -161,7 +161,7 @@ type Res = SchemaType<typeof s, [], true>;
 ### Ref, Def
 
 - [x] Reading an array of global references
-- [x] `$defs` (Defining $def in a nested property will still result in a root e.g. `#/$defs/hoge`)
+- [x] `$defs` ($defs in nested places will be ignored.)
 - [x] `$ref` to $def and global references
 - [x] Circular reference `$ref` (If the $ref target is an object or an array, the item will be no longer `required`.)
 - [ ] `$dynamicRef`
