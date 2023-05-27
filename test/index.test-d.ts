@@ -76,6 +76,51 @@ describe('SchemaType', () => {
 			expectNotType<S>({});
 		});
 	});
+	describe('additional properties', () => {
+		test('true', () => {
+			const s = {
+				type: 'object',
+				additionalProperties: true,
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string' });
+		});
+		test('schema', () => {
+			const s = {
+				type: 'object',
+				additionalProperties: { type: 'string' },
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string' });
+			expectType<S>({ bar: 'string' });
+			expectNotType<S>({ bar: 123 });
+		});
+		test('true with properties', () => {
+			const s = {
+				type: 'object',
+				properties: {
+					foo: { type: 'string' },
+				},
+				additionalProperties: true,
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string' });
+			expectType<S>({ bar: 'string' });
+		});
+		test('schema with properties', () => {
+			const s = {
+				type: 'object',
+				properties: {
+					foo: { type: 'string' },
+				},
+				additionalProperties: { type: 'string' },
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string' });
+			expectType<S>({ bar: 'string' });
+			expectNotType<S>({ bar: 123 });
+		});
+	});
 	describe('is response', () => {
 		test('is response', () => {
 			const s = {

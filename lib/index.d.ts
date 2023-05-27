@@ -127,18 +127,32 @@ type GenReferences<R extends JSONSchema7Definition[], p extends JSONSchema7> =
 	p['$defs'] extends Obj ? [...R, ...UnionToArray<DefsToDefUnion<p['$defs']>>] :
 	R;
 
-type ObjectSchemaTypeDef<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
+type ObjectProperties<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
 	p['properties'] extends NonNullable<Obj> ?
 		p['anyOf'] extends ReadonlyArray<JSONSchema7> ?
-			p['anyOf'][number]['required'] extends ReadonlyArray<keyof p['properties']> ?
-				UnionObjType<p['properties'], NonNullable<p['anyOf'][number]['required']>, GenReferences<R, p>, IsResponse> & ObjType<p['properties'], NonNullable<p['required']>, GenReferences<R, p>, IsResponse>
-				: never
-			: ObjType<p['properties'], NonNullable<p['required']>, GenReferences<R, p>, IsResponse>
+		p['anyOf'][number]['required'] extends ReadonlyArray<keyof p['properties']> ?
+			UnionObjType<p['properties'], NonNullable<p['anyOf'][number]['required']>, GenReferences<R, p>, IsResponse>
+				& ObjType<p['properties'], NonNullable<p['required']>, GenReferences<R, p>, IsResponse>
+			: never
+		: ObjType<p['properties'], NonNullable<p['required']>, GenReferences<R, p>, IsResponse>
+	: NonNullable<unknown>;
+type ObjectAdditionalProperties<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
+	p['additionalProperties'] extends true ? { [k: string]: any } :
+	p['additionalProperties'] extends NonNullable<JSONSchema7> ? { [k: string]: ChildSchemaType<p['additionalProperties'], R, IsResponse> } :
+	NonNullable<unknown>;
+
+type ObjectSchemaTypeDef<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
+	p['properties'] extends NonNullable<Obj> ?
+		Projected<
+			ObjectProperties<p, R, IsResponse> &
+			ObjectAdditionalProperties<p, R, IsResponse>
+		>
 	:
+	p['additionalProperties'] extends (true | NonNullable<JSONSchema7>) ? ObjectAdditionalProperties<p, R, IsResponse> :
 	p['anyOf'] extends ReadonlyArray<JSONSchema7> ? never : // see README.md
-	p['allOf'] extends ReadonlyArray<JSONSchema7> ? AllOfSchema<p['allOf'], GenReferences<R, p>, IsResponse> :
+	p['allOf'] extends ReadonlyArray<JSONSchema7> ? Projected<AllOfSchema<p['allOf'], GenReferences<R, p>, IsResponse>> :
 	p['oneOf'] extends ReadonlyArray<JSONSchema7> ? UnionSchemaType<p['oneOf'], GenReferences<R, p>, IsResponse> : // But `oneOf` in object is not recommended
-	any
+	Record<string, any>;
 
 type TypeNameToType<T extends JSONSchema7TypeName> =
 	T extends 'null' ? null :
@@ -147,7 +161,7 @@ type TypeNameToType<T extends JSONSchema7TypeName> =
 	T extends 'string' ? string :
 	T extends 'boolean' ? boolean :
 	T extends 'array' ? any[] :
-	T extends 'object' ? Record<any, any> :
+	T extends 'object' ? Record<string, any> :
 	any;
 
 export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =

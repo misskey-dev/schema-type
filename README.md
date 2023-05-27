@@ -153,6 +153,7 @@ type Res = SchemaType<typeof s, [], true>;
 - [x] `type: 'enum'`
 - [x] `type: 'null'`
 - [x] `type: Array<JSONSchema7TypeName>`
+- [x] `additionalProperties`
 - [ ] `not`
 - [ ] `if`, `then`, `else`
 - [ ] `dependentRequired`, `dependentSchemas`
