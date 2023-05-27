@@ -15,6 +15,14 @@ export type GetDef<References extends JSONSchema7Definition[], Key extends GetKe
 			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? SchemaType<R['$defs'][D], References, IsResponse>
 			: never : never : never
 	: never;
+type GetChildDef<References extends JSONSchema7Definition[], Key extends GetKeys<References>, IsResponse extends boolean = false, R extends References[number] = References[number]> =
+	R extends any ?
+	Key extends R['$id'] ?
+		ChildSchemaType<R, References, IsResponse> :
+		Key extends `${R['$id']}#/$defs/${infer D}` ?
+			D extends keyof R['$defs'] ? R['$defs'][D] extends JSONSchema7 ? ChildSchemaType<R['$defs'][D], References, IsResponse>
+			: never : never : never
+	: never;
 export type GetRefs<ReferencesRecord extends Record<string, JSONSchema7Definition>> =
 	UnionToArray<ReferencesRecord[keyof ReferencesRecord]>;
 
@@ -165,7 +173,7 @@ type TypeNameToType<T extends JSONSchema7TypeName> =
 	any;
 
 export type ChildSchemaType<p extends JSONSchema7, R extends JSONSchema7Definition[], IsResponse extends boolean> =
-	p['$ref'] extends GetKeys<GenReferences<R, p>, ''> ? GetDef<GenReferences<R, p>, p['$ref'], IsResponse> :
+	p['$ref'] extends GetKeys<GenReferences<R, p>, ''> ? GetChildDef<GenReferences<R, p>, p['$ref'], IsResponse> :
 	p['const'] extends JSONSchema7Type ? p['const'] :
 	p['enum'] extends ReadonlyArray<JSONSchema7Type> ? p['enum'][number] :
 	p['type'] extends 'string' ? (
