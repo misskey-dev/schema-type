@@ -49,9 +49,9 @@ export type WeakSerialized<T> =
 	: T extends RelativeIndexable<number>
 		? T | string
 	: T extends Record<string, any>
-		? { [K in keyof T]: T[K] | Serialized<T[K]> }
+		? { [K in keyof T]: T[K] | WeakSerialized<T[K]> }
 			: T extends (Array<infer U> | ReadonlyArray<infer U>)
-				? Array<U | Serialized<U>>
+				? Array<U | WeakSerialized<U>>
 	: T;
 
 // Items with `$ref` to prohibit to be required
