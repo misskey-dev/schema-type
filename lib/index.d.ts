@@ -35,39 +35,23 @@ export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Defin
 export type Serialized<T> = 
 	T extends Date
 		? string
-		: T extends (Date | null)
-			? (string | null)
 	: T extends RelativeIndexable<number>
 		? string
-		: T extends (RelativeIndexable<number> | null)
-			? (string | null)
 	: T extends Record<string, any>
 		? { [K in keyof T]: Serialized<T[K]> }
-		: T extends (Record<string, any> | null)
-			? ({ [K in keyof T]: Serialized<T[K]> } | null)
 			: T extends (Array<infer U> | ReadonlyArray<infer U>)
 				? Array<Serialized<U>>
-				: T extends ((Array<infer U> | null) | (ReadonlyArray<infer U> | null))
-					? (Array<Serialized<U>> | null)
 	: T;
 
 export type WeakSerialized<T> = 
 	T extends Date
 		? T | string
-		: T extends (Date | null)
-			? (T | string | null)
 	: T extends RelativeIndexable<number>
 		? T | string
-		: T extends (RelativeIndexable<number> | null)
-			? (T | string | null)
 	: T extends Record<string, any>
 		? { [K in keyof T]: T[K] | Serialized<T[K]> }
-		: T extends (Record<string, any> | null)
-			? ({ [K in keyof T]: T[K] | Serialized<T[K]> } | null)
 			: T extends (Array<infer U> | ReadonlyArray<infer U>)
 				? Array<U | Serialized<U>>
-				: T extends ((Array<infer U> | null) | (ReadonlyArray<infer U> | null))
-					? (Array<U | Serialized<U>> | null)
 	: T;
 
 // Items with `$ref` to prohibit to be required

@@ -548,5 +548,36 @@ describe('SchemaType', () => {
 			expectType<SSW>({ foo: 'string' });
 			expectType<SSW>({ foo: new Date() });
 		});
+		test('nullable', () => {
+			const s = {
+				type: 'object',
+				properties: {
+					foo: {
+						oneOf: [{
+							type: 'string',
+							format: 'date-time',
+						}, { type: 'null' }]
+					},
+					bar: {
+						oneOf: [{
+							type: 'string',
+							format: 'binary',
+						}, { type: 'null' }]
+					}
+				},
+				required: ['foo'],
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: new Date() });
+			expectNotType<S>({ foo: 'string' });
+
+			type SS = _.Serialized<S>;
+			expectType<SS>({ foo: 'string' });
+			expectNotType<SS>({ foo: new Date() });
+
+			type SSW = _.WeakSerialized<S>;
+			expectType<SSW>({ foo: 'string' });
+			expectType<SSW>({ foo: new Date() });
+		});
 	});
 });
