@@ -2,8 +2,9 @@ import type { DeepReadonly } from 'ts-essentials';
 import type { JSONSchema7Type, JSONSchema7TypeName, JSONSchema7 as OriginalSchema7 } from 'json-schema';
 
 // DeepReadonlyでarrayをreadonlyにする
-export type JSONSchema7 = OriginalSchema7 | DeepReadonly<OriginalSchema7>;
-export type JSONSchema7Definition = (OriginalSchema7 & { $id: string }) | DeepReadonly<OriginalSchema7 & { $id: string }>;
+export type JSONSchema7 = DeepReadonly<OriginalSchema7 & { properties?: Obj | undefined }>;
+export type Obj = Record<string, any>;
+export type JSONSchema7Definition = DeepReadonly<OriginalSchema7 & { $id: string; properties?: Obj | undefined }>;
 
 // https://github.com/misskey-dev/misskey/pull/8144#discussion_r785287552
 // To get union, we use `Foo extends any ? Hoge<Foo> : never`
@@ -30,8 +31,6 @@ export type GetKeys<References extends JSONSchema7Definition[], p extends string
 	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
 export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Definition>, p extends string = '', R extends JSONSchema7 = ReferencesRecord[keyof ReferencesRecord]> =
 	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
-
-export type Obj = Record<string, JSONSchema7>;
 
 export type Serialized<T> = 
 	T extends Date
@@ -74,13 +73,10 @@ export type WeakSerialized<T> =
 // Items with `$ref` to prohibit to be required
 type InfinitProhibitedDef<R extends JSONSchema7Definition[], x extends R[number]['$id'], r extends JSONSchema7 = R[number]> =
 	r extends any ? r['$id'] extends x ? r['type'] extends ('object' | 'array') ? true : false : false : false;
-type RequiredKey<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T extends JSONSchema7 = s[K]> =
-	T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K;
-//type OptionalKey<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[], P extends keyof s = keyof s, T extends JSONSchema7 = s[P]> =
-//	P extends RP[number] ?
-		// Pick properties prohibited with `$ref`
-//		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? P : never : never
-//	: P;
+type RequiredKey<s extends Obj, K extends keyof s, R extends JSONSchema7Definition[], T = s[K]> =
+	T extends NonNullable<JSONSchema7> ?
+		T['$ref'] extends R[number]['$id'] ? InfinitProhibitedDef<R, T['$ref']> extends true ? never : K : K
+	: K;
 type HasDefault<s extends Obj, K extends keyof s, T extends JSONSchema7 = s[K]> =
 	T extends { default: any } ? K : never;
 
@@ -92,12 +88,12 @@ type Projected<T> = T extends Record<string, any> ? { [K in keyof T]: T[K] } : T
 export type ObjType<s extends Obj, RP extends ReadonlyArray<keyof s>, R extends JSONSchema7Definition[], IsResponse extends boolean> =
 	Projected<
 		(RP extends NonNullable<ReadonlyArray<keyof s>> ? 
-			{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R, IsResponse> } &
-			{ -readonly [Q in RP[number] as RequiredKey<s, Q, R>]-?: ChildSchemaType<s[Q], R, IsResponse> }
+			{ -readonly [P in keyof s]?: s[P] extends NonNullable<JSONSchema7> ? ChildSchemaType<s[P], R, IsResponse> : s[P] } &
+			{ -readonly [Q in RP[number] as RequiredKey<s, Q, R>]-?: s[Q] extends NonNullable<JSONSchema7> ? ChildSchemaType<s[Q], R, IsResponse>: s[Q] }
 		:
-			{ -readonly [P in keyof s]?: ChildSchemaType<s[P], R, IsResponse> }
+			{ -readonly [P in keyof s]?: s[P] extends NonNullable<JSONSchema7> ? ChildSchemaType<s[P], R, IsResponse> : s[P] }
 		) & (IsResponse extends true ?
-			{ -readonly [Q in keyof s as HasDefault<s, Q> ]-?: ChildSchemaType<s[Q], R, IsResponse> }
+			{ -readonly [Q in keyof s as HasDefault<s, Q> ]-?: s[Q] extends NonNullable<JSONSchema7> ? ChildSchemaType<s[Q], R, IsResponse> : s[Q] }
 			: NonNullable<unknown>
 		)
 	>;

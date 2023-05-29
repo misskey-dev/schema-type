@@ -76,6 +76,26 @@ describe('SchemaType', () => {
 			expectNotType<S>({});
 		});
 	});
+	describe('property assertion', () => {
+		test('property assertion', () => {
+			type X = {
+				values: X[];
+			};
+			const s = {
+				type: 'object',
+				properties: {
+					foo: { type: 'string' },
+					bar: {
+						type: 'object',
+					} as unknown as X,
+				},
+				required: ['foo', 'bar'],
+			} as const satisfies _.JSONSchema7;
+			type S = _.SchemaType<typeof s, []>;
+			expectType<S>({ foo: 'string', bar: { values: [] } });
+			expectNotType<S>({});
+		});
+	});
 	describe('additional properties', () => {
 		test('true', () => {
 			const s = {
@@ -355,7 +375,7 @@ describe('SchemaType', () => {
 			expectType<S>({ foo: { foo: { foo: {} } } });
 			expectNotType<S>({});
 		});
-		test('recursive required', () => {
+		test('recursive required defs', () => {
 			const s = {
 				$defs: {
 					bar: {

@@ -127,7 +127,7 @@ const s = {
 } as const satisfies JSONSchema7;
 
 type Req = SchemaType<typeof s, [], false>;
-/*
+/**
  * type Req = {
  *    foo?: string | undefined;
  *    hoge?: string | undefined;
@@ -135,10 +135,42 @@ type Req = SchemaType<typeof s, [], false>;
  */
 
 type Res = SchemaType<typeof s, [], true>;
-/*
+/**
  * type Res = {
  *    foo: string;
  *    hoge?: string | undefined;
+ * }
+ */
+```
+
+### Property Type Assertion
+objectのpropertiesで、プロパティを`as unknown as X`と書いて型`X`で上書きすると、`SchemaType`はその上書きされた型を返します。  
+ただし、`X`が`extends NonNullable<JSONSchema7>`でJSONSchema7として認識されてしまう場合はうまく動きません。
+
+If you overwrite a property with type `X` in the properties of an object by writing `as unknown as X`, `SchemaType` will return the overwritten type.  
+However, if `X` is recognized as JSONSchema7 with `extends NonNullable<JSONSchema7>`, it will not work.
+
+```typescript
+type X = {
+	values: X[];
+};
+
+const s = {
+	type: 'object',
+	properties: {
+		foo: { type: 'string' },
+		bar: {
+			type: 'object',
+		} as unknown as X,
+	},
+	required: ['foo', 'bar'],
+} as const satisfies JSONSchema7;
+
+type S = SchemaType<typeof s, []>;
+/**
+ * type S = {
+ *     foo: string;
+ *     bar: X;
  * }
  */
 ```
