@@ -33,7 +33,7 @@ export type GetRefsKeys<ReferencesRecord extends Record<string, JSONSchema7Defin
 	R extends any ? R['$id'] extends `${p}${infer x}` ? x | (keyof R['$defs'] extends string ? `${x}#/$defs/${keyof R['$defs']}` : never) : never : never;
 
 export type Serialized<T> = 
-	T extends Date
+	T extends NonNullable<Date>
 		? string
 	: T extends RelativeIndexable<number>
 		? string
@@ -44,7 +44,7 @@ export type Serialized<T> =
 	: T;
 
 export type WeakSerialized<T> = 
-	T extends Date
+	T extends NonNullable<Date>
 		? T | string
 	: T extends RelativeIndexable<number>
 		? T | string

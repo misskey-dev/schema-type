@@ -563,6 +563,9 @@ describe('SchemaType', () => {
 							type: 'string',
 							format: 'binary',
 						}, { type: 'null' }]
+					},
+					arr: {
+						type: 'array',
 					}
 				},
 				required: ['foo'],
